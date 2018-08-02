@@ -91,15 +91,16 @@ public class CheckQuality {
         MatOfDouble mean = new MatOfDouble();
         MatOfDouble std = new MatOfDouble();
 
-        /***------------------------------------------------------
+        /** ------------------------------------------------------
          *  제외할 조건들: blur, ear, rotation
-         *  ---------------------------------------------------***/
+         *  --------------------------------------------------- **/
+
         // Bitmap -> Mat(matOri, matLeft, matRight)
         // 전체 Mat: matOri
-        Mat matOri = new Mat (mBitmap.getWidth(), mBitmap.getHeight(), CV_32F);  //CV_8UC1
+        Mat matOri = new Mat (mBitmap.getWidth(), mBitmap.getHeight(), CV_32F);     // CV_8UC1
         Utils.bitmapToMat(mBitmap, matOri);
         // 왼쪽눈 Mat: matLeft
-        Mat matLeft = new Mat (bitCrop_L.getWidth(), bitCrop_L.getHeight(), CV_32F);  //CV_8UC1
+        Mat matLeft = new Mat (bitCrop_L.getWidth(), bitCrop_L.getHeight(), CV_32F);  // CV_8UC1
         Utils.bitmapToMat(bitCrop_L, matLeft);
         // 오른쪽눈 Mat: matRight
         Mat matRight = new Mat (bitCrop_R.getWidth(), bitCrop_R.getHeight(), CV_32F);
@@ -108,7 +109,7 @@ public class CheckQuality {
         // blur : cv2.Laplacian(image, cv2.CV_64F).var()--------------------
         // 전체
         Imgproc.cvtColor(matOri, matGray, Imgproc.COLOR_BGR2GRAY);
-        //Imgproc.Laplacian(matLeftGray, matLeftGray, CV_16S); //-> Gray CV_16S
+        // Imgproc.Laplacian(matLeftGray, matLeftGray, CV_16S); // -> Gray CV_16S
         Imgproc.Laplacian(matGray, matGray, CV_16S, 3, 1, 0, BORDER_DEFAULT );
         Core.meanStdDev(matGray, mean, std);
         this.mBlur_Bitmap = std.get(0,0)[0];
@@ -116,28 +117,42 @@ public class CheckQuality {
 
         // 왼쪽눈
         Imgproc.cvtColor(matLeft, matGray, Imgproc.COLOR_BGR2GRAY);
-        //Imgproc.Laplacian(matLeftGray, matLeftGray, CV_16S); //-> Gray CV_16S
+        //Bitmap leftGray = .
+        //Utils.matToBitmap(matGray,leftGray);
+        // Imgproc.Laplacian(matLeftGray, matLeftGray, CV_16S); //-> Gray CV_16S
         Imgproc.Laplacian(matGray, matGray, CV_16S, 3, 1, 0, BORDER_DEFAULT );
         Core.meanStdDev(matGray, mean, std);
-        //Imgproc.Laplacian(matLeft,matLeft,CV_64F);//-> Color
-        //Core.meanStdDev(matLeft, mean, std);
-        //this.mBlur_L = Math.pow(std.get(0,0)[0], 2);  //double stdDev = std.get(0,0)[0];
+        // Imgproc.Laplacian(matLeft,matLeft,CV_64F);//-> Color
+        // Core.meanStdDev(matLeft, mean, std);
+        // this.mBlur_L = Math.pow(std.get(0,0)[0], 2);  //double stdDev = std.get(0,0)[0];
         this.mBlur_L = std.get(0,0)[0];  //double stdDev = std.get(0,0)[0];
-        Log.i(TAG,"Blur Left:"+String.valueOf( this.mBlur_L));
+        Log.i(TAG,"Blur Left:" + String.valueOf(this.mBlur_L));
 
         // 오른쪽눈
         Imgproc.cvtColor(matLeft, matGray, Imgproc.COLOR_BGR2GRAY);
+        //Bitmap rightGray = null;
+        //Utils.matToBitmap(matGray,rightGray);
         Imgproc.Laplacian(matGray, matGray, CV_16S); //-> Gray
         Core.meanStdDev(matGray, mean, std);
-        //Imgproc.Laplacian(matLeft,matLeft,CV_64F);//-> Color
-        //Core.meanStdDev(matLeft, mean, std);
-        this.mBlur_R = std.get(0,0)[0]; // Math.pow(std.get(0,0)[0], 2);  //double stdDev = std.get(0,0)[0];
-        Log.i(TAG,"Blur Right:"+String.valueOf( this.mBlur_R));
+        // Imgproc.Laplacian(matLeft,matLeft,CV_64F);//-> Color
+        // Core.meanStdDev(matLeft, mean, std);
+        this.mBlur_R = std.get(0,0)[0];
+        // Math.pow(std.get(0,0)[0], 2);
+        // double stdDev = std.get(0,0)[0];
+        Log.i(TAG,"Blur Right: "+String.valueOf( this.mBlur_R));
 
         boolean blur = false;
-        if(mBlur_L>0 && mBlur_R > 0){
+        if(mBlur_L > 0 && mBlur_R > 0){
             blur = true;
         }
+        ///////////////
+        /*
+        String left = "left_g" + String.valueOf(mBlur_L);
+        String right = "right_g" + String.valueOf(mBlur_R);
+        ImageUtils.saveBitmap(rightGray, right);
+        ImageUtils.saveBitmap(leftGray, left);
+        */
+        ///////////////////////
 
         return blur;
     }

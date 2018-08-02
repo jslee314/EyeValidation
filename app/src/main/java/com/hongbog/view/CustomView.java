@@ -23,13 +23,23 @@ import com.tzutalin.dlibtest.R;
 public class CustomView extends View {
 
     private Bitmap mBitmap;
-    private float mRatioWidth = 0;
-    private float mRatioHeight = 0;
+
     private float mEyeWidth = 0;
     private float mEyeHeight = 0;
     private float mStartLeft = 0;
     private float mStartTop = 0;
+
     private float mEye2Eye = 0;
+
+    private float mRatioWidth = 0;
+    private float mRatioHeight = 0;
+
+    public float getmRatioWidth() {
+        return mRatioWidth;
+    }
+    public float getmRatioHeight() {
+        return mRatioHeight;
+    }
 
     public float getEyeWidth() {
         return mEyeWidth;
@@ -71,8 +81,8 @@ public class CustomView extends View {
 
         mEyeWidth = mRatioWidth/9;
         mEyeHeight = mRatioHeight/20;
-        mStartLeft = mEyeWidth * 3;
-        mStartTop = (mEyeHeight * 2) + hundredDp;
+        mStartLeft = mEyeWidth * 3;                 // start point x
+        mStartTop = (mEyeHeight * 2) + hundredDp;   // start point y
         mEye2Eye = mEyeWidth;
         mBitmap = Bitmap.createScaledBitmap(mBitmap, (int)mEyeWidth, (int)mEyeHeight,  true);
 

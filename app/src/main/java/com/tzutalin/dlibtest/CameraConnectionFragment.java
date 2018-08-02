@@ -80,8 +80,7 @@ import timber.log.Timber;
 
 public class CameraConnectionFragment extends Fragment {
 
-    //private static final String TAG = "CameraFragment";
-    private static final String TAG = "i99";
+    private static final String TAG = "CameraFragment";
 
     //카메라 미리보기 크기가 DESIRED_SIZE x DESIRED_SIZE 사각형을 포함 할 수있는 픽셀 크기로 가장 작은 프레임으로 선택됨
     private static final int MINIMUM_PREVIEW_SIZE = 500;       // 1000일때, S6와 Note5는 1088x1088 // 500일때 1280x720
@@ -131,6 +130,17 @@ public class CameraConnectionFragment extends Fragment {
 
     private float mEyeStartLeft;
     private float mEyeStartTop;
+
+    private float mEyeWidth;
+    private float mEyeHeight;
+    private float mStartLeft;
+    private float mStartTop;
+    private float mEye2Eye;
+    private float mRatioWidth;
+    private float mRatioHeight;
+
+    private ArrayList<Float> mEyeIndex = new ArrayList<Float>();
+
     private TextView mStateTextView;
 
     public static final int EYE_BOUNDARY_STEADY_STATE = 1;
@@ -229,7 +239,6 @@ public class CameraConnectionFragment extends Fragment {
         }
     };
 
-
     @Override
     public void onDestroy() {
         Dlog.d("onDestroy");
@@ -238,25 +247,40 @@ public class CameraConnectionFragment extends Fragment {
         super.onDestroy();
     }
 
-
     @Override
     public View onCreateView(
             final LayoutInflater inflater, final ViewGroup container, final Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_camera_connection, container, false);
     }
 
-
     @Override
     public void onViewCreated(final View view, final Bundle savedInstanceState) {
+
         // 카메라의 화면을 보여주는 TextureView
         textureView = (AutoFitTextureView) view.findViewById(R.id.texture);
         RelativeLayout surfaceView = (RelativeLayout)view.findViewById(R.id.view);
         CustomView eyeOverlayView = new CustomView(this);
         surfaceView.addView(eyeOverlayView);
+
         mStateTextView = getActivity().findViewById(R.id.state_textview);
 
         mEyeStartLeft = eyeOverlayView.getStartLeft();
-        mEyeStartTop = eyeOverlayView.getStartTop();
+        mEyeStartTop  = eyeOverlayView.getStartTop();
+
+        // setAspectRatio 이후에 수행해야 함!!
+        mEyeIndex.add(0, eyeOverlayView.getEyeWidth());
+        mEyeIndex.add(1, eyeOverlayView.getEyeHeight());
+        mEyeIndex.add(2, eyeOverlayView.getStartLeft());
+        mEyeIndex.add(3, eyeOverlayView.getStartTop());
+
+        mEyeIndex.add(4, eyeOverlayView.getEye2Eye());
+
+        mEyeIndex.add(5, eyeOverlayView.getmRatioWidth());
+        mEyeIndex.add(6, eyeOverlayView.getmRatioHeight());
+        Log.i(TAG, String.format("mEyeIndex add: %f, %f, %f, %f, %f, %f, %f", eyeOverlayView.getEyeWidth(), eyeOverlayView.getEyeHeight(),
+                eyeOverlayView.getStartLeft(),   eyeOverlayView.getStartTop(),   eyeOverlayView.getEye2Eye(),
+                eyeOverlayView.getmRatioWidth(), eyeOverlayView.getmRatioHeight() ));
+
     }
 
 
@@ -274,11 +298,12 @@ public class CameraConnectionFragment extends Fragment {
         // 그렇지 않으면 표면이 SurfaceTextureListener에서 준비 될 때까지 기다린다.
         // else 실행 후 if 실행
        if (textureView.isAvailable()) {
+
            // onSurfaceTextureAvailable 이벤트 실생. 이 이벤트 안에서 openCamera()  수행
-           openCamera(textureView.getWidth(), textureView.getHeight());
-        } else {
-            // textureView에 Listener를 등록하고 (setSurfaceTextureListener)
-            textureView.setSurfaceTextureListener(surfaceTextureListener);
+           openCamera (textureView.getWidth(), textureView.getHeight());
+       }else {
+           // textureView에 Listener를 등록하고 (setSurfaceTextureListener)
+           textureView.setSurfaceTextureListener(surfaceTextureListener);
         }
     }
 
@@ -294,7 +319,7 @@ public class CameraConnectionFragment extends Fragment {
     // Opens the camera specified by CameraConnectionFragment #cameraId
     @SuppressLint("LongLogTag")
     @DebugLog
-    private void openCamera(final int width, final int height) {
+    private void openCamera (final int width, final int height) {
         setUpCameraOutputs(width, height);
         configureTransform(width, height);
         final Activity activity = getActivity();
@@ -361,6 +386,7 @@ public class CameraConnectionFragment extends Fragment {
             } else {
                 textureView.setAspectRatio(readerSize.getHeight(), readerSize.getWidth());
             }
+
 
             CameraConnectionFragment.this.cameraId = cameraId;
             return;
@@ -559,7 +585,7 @@ public class CameraConnectionFragment extends Fragment {
             Log.i(TAG, "Exception!", e);
         }
 
-        mOnGetPreviewListener.initialize(getActivity().getApplicationContext(), getActivity().getAssets(), inferenceHandler, mLabel);
+        mOnGetPreviewListener.initialize(getActivity().getApplicationContext(), getActivity().getAssets(), inferenceHandler, mLabel, mEyeIndex);
     }
 
 

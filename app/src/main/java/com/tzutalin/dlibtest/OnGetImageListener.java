@@ -47,12 +47,11 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
 
-
 // preview "1) 프레임을 가져 와서",   이미지를 "2)비트 맵으로 변환"하여   dlib lib로 처리하는 클래스
 public class OnGetImageListener implements OnImageAvailableListener {
 
-    private static final int INPUT_SIZE = 500;//500; //224;
-    private static final String TAG = "i99";
+    private static final int INPUT_SIZE = 500;  // 500; // 224;
+    private static final String TAG = "ImageListener";
 
     private int mScreenRotation = 90;
     private int mPreviewWdith = 0;
@@ -72,6 +71,15 @@ public class OnGetImageListener implements OnImageAvailableListener {
     int mNumCrop =0;
     Bitmap bitmap_left[] = new Bitmap[6];
     Bitmap bitmap_right[]= new Bitmap[6];
+
+    private ArrayList<Float> mEyeIndex = new ArrayList<>();
+    private float mEyeWidth;
+    private float mEyeHeight;
+    private float mStartLeft;
+    private float mStartTop;
+    private float mEye2Eye;
+    private float mRatioWidth;
+    private float mRatioHeight;
 
     //private TrasparentTitleView mTransparentTitleView;  // timecost를 보여주기위해
 //    private FloatingCameraWindow mWindow;               // Landmark point를 보여주는 preview
@@ -94,11 +102,11 @@ public class OnGetImageListener implements OnImageAvailableListener {
     }
 
 
-    public void initialize(final Context context, final AssetManager assetManager, final Handler handler, final String label) {
+    public void initialize (final Context context, final AssetManager assetManager, final Handler handler, final String label,  ArrayList<Float> mEyeIndex ) {
         this.mContext = context;
         this.mInferenceHandler = handler;
         mFaceDet = new FaceDet(Constants.getFaceShapeModelPath());
-//        mWindow = new FloatingCameraWindow(mContext);
+//      mWindow = new FloatingCameraWindow(mContext);
 
         mFaceLandmardkPaint = new Paint();
         mFaceLandmardkPaint.setColor(Color.GREEN);
@@ -106,6 +114,16 @@ public class OnGetImageListener implements OnImageAvailableListener {
         mFaceLandmardkPaint.setStyle(Paint.Style.STROKE);
 
         mSensorDTO.setLabel(label);
+
+        mEyeWidth  = mEyeIndex.get(0);
+        mEyeHeight = mEyeIndex.get(1);
+        mStartLeft = mEyeIndex.get(2);
+        mStartTop  = mEyeIndex.get(3);
+        mEye2Eye   = mEyeIndex.get(4);
+        mRatioWidth  = mEyeIndex.get(5);
+        mRatioHeight = mEyeIndex.get(6);
+        Log.i(TAG, String.format("mEyeIndex get: %f, %f, %f, %f, %f, %f, %f",mEyeWidth, mEyeHeight, mStartLeft , mStartTop, mEye2Eye, mRatioWidth, mRatioHeight));
+
     }
 
 
@@ -114,7 +132,6 @@ public class OnGetImageListener implements OnImageAvailableListener {
             if (mFaceDet != null) {
                 mFaceDet.release();
             }
-            /*if (mWindow != null) { mWindow.release(); }*/
         }
     }
 
@@ -197,7 +214,8 @@ public class OnGetImageListener implements OnImageAvailableListener {
             final int yRowStride = planes[0].getRowStride();
             final int uvRowStride = planes[1].getRowStride();
             final int uvPixelStride = planes[1].getPixelStride();
-            ImageUtils.convertYUV420ToARGB8888( mYUVBytes[0], mYUVBytes[1], mYUVBytes[2], mRGBBytes,
+            ImageUtils.convertYUV420ToARGB8888(
+                    mYUVBytes[0], mYUVBytes[1], mYUVBytes[2], mRGBBytes,
                     mPreviewWdith,
                     mPreviewHeight,
                     yRowStride,
@@ -219,7 +237,7 @@ public class OnGetImageListener implements OnImageAvailableListener {
         drawResizedBitmap(mRGBframeBitmap, mBitmap);
 
         mInferenceHandler.post(
-                new Runnable() {
+                new Runnable(){
                     @Override
                     public void run() {
                         List<VisionDetRet> results;
@@ -239,21 +257,20 @@ public class OnGetImageListener implements OnImageAvailableListener {
                                     }if(j>41  && j<48){      //오른쪽(42 ~ 47)
                                         canvas.drawCircle(point.x , point.y, 3, mFaceLandmardkPaint);
                                     }
-                                }
-                                */
+                                }*/
 
                                 CheckQuality quality = new CheckQuality(mBitmap, ret);
                                 quality.setImageScope(false);
                                 quality.setAccept(false);
 
                                 /* -----------------------
-                                * *      눈 영역만 crop
-                                * * ----------------------- */
+                                * *     눈 영역만 crop
+                                * * ---------------------- */
                                 Bitmap bitCrop_L = Bitmap.createBitmap(mBitmap, ret.mStartLeftX, ret.mStartLeftY, ret.mWidthLeft, ret.mHightLeft);
                                 Bitmap bitCrop_R = Bitmap.createBitmap(mBitmap, ret.mStartRightX, ret.mStartRightY, ret.mWidthRight, ret.mHightRight);
 
                                 Log.i(TAG, String.format("%d: left size (%d,%d)", INPUT_SIZE, bitCrop_L.getWidth(), bitCrop_L.getHeight()));
-                                //Log.i(TAG, String.format("%d: right size (%d,%d)", INPUT_SIZE, bitCrop_L.getWidth(), bitCrop_L.getHeight()));
+                                // Log.i(TAG, String.format("%d: right size (%d,%d)", INPUT_SIZE, bitCrop_L.getWidth(), bitCrop_L.getHeight()));
 
                                 // 몇가지 조건 만족여부 조사
                                 quality.isImageScope();
@@ -261,8 +278,8 @@ public class OnGetImageListener implements OnImageAvailableListener {
 
                                 //if (quality.isAccept() == true && quality.isImageScope()==true) {
 
-                                int sizeLeft = (bitCrop_L.getWidth()* bitCrop_L.getHeight());
-                                int sizeRight = (bitCrop_L.getWidth()* bitCrop_L.getHeight());
+                                int sizeLeft = (bitCrop_L.getWidth() * bitCrop_L.getHeight());
+                                int sizeRight = (bitCrop_L.getWidth() * bitCrop_L.getHeight());
 
                                 //if(sizeLeft<40000 && sizeRight<40000){
 
@@ -273,8 +290,8 @@ public class OnGetImageListener implements OnImageAvailableListener {
                                 //String left = "left_"+String.valueOf(mNumCrop) ;
 
                                 //임시 주석 taein
-                                /*ImageUtils.saveBitmap(bitCrop_R, right);
-                                ImageUtils.saveBitmap(bitCrop_L, left);*/
+                                ImageUtils.saveBitmap(bitCrop_R, right);
+                                ImageUtils.saveBitmap(bitCrop_L, left);
 
                                 try{
                                     bitmap_right[mNumCrop] = bitCrop_R;

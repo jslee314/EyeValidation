@@ -13,7 +13,7 @@
         android:gravity="center"
         android:text="@string/unstable_state_text"
         android:textAlignment="center"
-        android:textColor="?android:attr/colorError"
+        android:textColor="@android:color/holo_red_dark"
         android:textStyle="bold" />
 
 </FrameLayout>
